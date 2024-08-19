@@ -1,0 +1,47 @@
+@font-face {
+	font-family: commodore_pro;
+	src: url(C64_Pro_Mono-STYLE.ttf);
+}
+
+body {
+	background-color: #9787E7;
+	height: 100vh;
+	margin: auto;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+main {
+	font-family: commodore_pro;
+	margin: auto;
+	height: 42rem;
+	width: 64rem;
+	color: #9787E7;
+	background-color: #4E3C9C;
+	border: 2px solid #4E3C9C;
+}
+
+textarea {
+	box-sizing: border-box;
+	padding: 0;
+	font-family: commodore_pro;
+	font-size: 1rem;
+	background-color: #4E3C9C;
+	color: #9787E7;
+	border: none;
+	outline: none;
+	resize: none;
+	width: 100%;
+}
+
+textarea::-webkit-scrollbar {
+	display: none;
+}
+
+#output {
+	width: 64rem;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	overflow: hidden;
+}
