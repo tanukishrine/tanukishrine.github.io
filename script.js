@@ -1,5 +1,6 @@
 const output_html = document.getElementById('output');
 const input_html = document.getElementById('input');
+const cursor_html = document.getElementById('cursor');
 
 const index = [];
 const stack = [];
@@ -15,10 +16,27 @@ output_text.push(`${startup_spacing}==== WEB-BASED FORTH-SCRIPT v1.0 ====`);
 output_text.push(`${startup_spacing}==== OPEN SOURCE 2024 BY T.SZULC ====`);
 error = true; output_print(); error = false;
 
-input_html.addEventListener("keyup", function (event) {
+input_html.addEventListener("keydown", function (event) {
 	if (event.key === "Enter")	input_submit();
 	if (event.key === "Escape")	console.log('Escape!');
 });
+
+input_html.addEventListener('click', update_cursor);
+input_html.addEventListener('keyup', update_cursor);
+function update_cursor() {
+	if (event.key === "Enter") input_html.value = '';
+	let string = '';
+	for (let i = 0; i < input_html.selectionStart; i++)
+		string += space;
+	cursor_html.innerText = string + '\u2588';
+};
+setInterval(cursor_blinker, 1000);
+let blinker = true;
+function cursor_blinker() {
+	if (blinker)	cursor_html.style.display = 'none';
+	if (!blinker)	cursor_html.style.display = 'block';
+	blinker = !blinker;
+};
 
 function input_submit() {
 	const input_array = input_html.value.split(/[ \n]/);
