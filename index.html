@@ -7,11 +7,14 @@
 	<title>ForthScript</title>                                  
 </head>                                                         
 <body>                                                          
-	<main>
+	<div id="filter"></div>
+	<main for="input">
+	<div id="autofocus"></div>
 	<div id="output"></div>
 	<div id="input-area">
 		<textarea
 			id="input"
+			name="input"
 			rows="1"
 			cols="63"
 			autofocus
@@ -19,7 +22,8 @@
 		></textarea>
 		<div id="cursor"></div>
 	</div>
-	<script src="script.js"></script>                           
+	<div id="stack"></div>
 	</main>
+	<script src="script.js"></script>                           
 </body>                                                         
 </html> 
