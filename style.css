@@ -86,8 +86,7 @@ textarea::-webkit-scrollbar {
 #output {
 	width: 64rem;
 	white-space: pre;
-	text-overflow: ellipsis;
-	overflow: hidden;
+	tab-size: 2;
 }
 
 #input-area {
