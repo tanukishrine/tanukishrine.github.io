@@ -8,8 +8,9 @@ const stack_html		= document.getElementById('stack');
 const index				= [];
 const stack				= [];
 const return_stack		= [];
-const output_text		= [];
-const user_words		= [];
+let output_text			= [];
+let user_words			= [];
+let user_functions		= [];
 const memory			= Array(64000);
 let   error 			= false;
 
@@ -141,23 +142,29 @@ function parse_array(value) {
 
 // INTERPRET WORD
 function interpret_word(word, array) {
-	console.log(word, array);
 	if (word.length === 0) return;
+	if (is_userFunctions(word)) return;
 	if (is_userVocabulary(word, array)) return;
 	if (is_forthVocabulary(word, array)) return;
 	if (is_number(word)) return;
 	init_error0(word);
 };
 
+function is_userFunctions(word) {
+	const word_index = user_functions.findIndex(object => object.name === word);
+	if (word_index >= 0) { user_functions[word_index].exec(); return true; };
+	return false;
+};
+
 function is_userVocabulary(word) {		// check for capitalization
-	const word_index = user_words.findIndex(object => object.name === word)
+	const word_index = user_words.findIndex(object => object.name === word);
 	if (word_index >= 0) { parse_array(user_words[word_index].content); return true; };
 	return false;
 };
 
 function is_forthVocabulary(word, array) {
 	const word_index = forth_words.findIndex(object => object.name === word.toUpperCase());
-	if (word_index >= 0) { forth_words[word_index].exec(word, array); return true; };
+	if (word_index >= 0) { forth_words[word_index].exec(array); return true; };
 	return false;
 };
 
@@ -299,179 +306,303 @@ const forth_words = [{
 	}
 }, {
 	name: '"', // => include some way to include space characters
-	exec: function (word, array) {
+	exec: function (array) {
 		stack.push(array[index[index.length - 1] + 1]);
 		index[index.length - 1] = index[index.length - 1] + 1;
 	}
 }, {
 	name: 'S"',
-	exec: function (word, array) {
+	exec: function (array) {
 		let i = index[index.length - 1] + 1;
 		const string = [];
-		for (i; i < array.length - 1; i++) {
-			if (array[i] === '"') { break; }
+		for (i; i < array.length; i++) {
+			if (array[i] === '"') break;
 			string.push(array[i]);
 		};
-		console.log(array);
-		console.log(i);
+		if (i === array.length) i--;
 		index[index.length - 1] = i;
 		stack.push(string.join(' '));
 	}
 }, {
+	name: '\\S',
+	exec: function () {
+		stack.push(' ');
+	}
+}, {
+	name: 'NULL',
+	exec: function () {
+		stack.push(null);
+	}
+}, {
+	name: 'UNDEFINED',
+	exec: function () {
+		stack.push(undefined);
+	}
+}, {
+// INPUT OUTPUT INSTRUCTIONS
 	name: '.',
 	exec: function () {
 		output_text[output_text.length - 1] += `${stack.pop()} `;
 	}
 }, {
 	name: '.S',
-	exec: function () {
+	exec: function () { // does not account for displaying 'null' and 'undefined'
 		output_text[output_text.length - 1] += `<${stack.length}> ${stack.join(', ')} `;
 	}
+}, {
+	name: '.R',
+	exec: function () {
+		const count = stack.pop(); const string = [];
+		for (let i = 0; i < count; i++) string.push(' ');
+		output_text[output_text.length - 1] += `${string.join('')}${stack.pop()} `;
+	}
+}, {
+	name: 'CR',
+	exec: function () {
+		output_text.push('');
+	}
+}, {
+	name: 'SPACE',
+	exec: function () {
+		output_text[output_text.length - 1] += ' ';
+	}
+}, {
+	name: 'SPACES',
+	exec: function () {
+		const count = stack.pop(); const string = [];
+		for (let i = 0; i < count; i++) string.push(' ');
+		output_text[output_text.length - 1] += string.join('');
+	}
+}, {
+	name: 'PAGE',
+	exec: function () {
+		output_text = [];
+	}
+}, {
+	name: '."',
+	exec: function (array) {
+		let i = index[index.length - 1] + 1; let string = [];
+		for (i; i < array.length; i++) {
+			if (array[i] === '"') break;
+			string.push(array[i]);
+		};
+		if (i === array.length) i--;
+		index[index.length - 1] = i;
+		output_text[output_text.length - 1] += `${string.join(' ')} `;
+	}
+}, {
+	name: 'DUMP',
+	exec: function () {
+		const [u, addr] = [stack.pop(), stack.pop()];
+		for (let i = addr; i < addr + u; i++)
+			output_text.push(`${i}: ${memory[i]} - ${typeof memory[i]}`);
+		output_text.push('');
+	}
+}, {
+	name: 'TYPE', // To test after memory instructions are added.
+	exec: function () {
+		const [u, addr] = [stack.pop(), stack.pop()]; const string = [];
+		for (let i = addr; i < addr + u; i++)
+			string.push(memory[i]);
+		output_text[output_text.length - 1] = `${string.join('')} `;
+	}
+}, {
+	name: 'ACCEPT',
+	exec: function () {}
+	// Read characters (until carriage-return) from input device to address.
+}, {
+// MEMORY AND DICTIONARY INSTRUCTIONS
+	name: '@',
+	exec: function () {
+		stack.push(memory[stack.pop()]);
+	}
+}, {
+	name: '!',
+	exec: function () {
+		memory[stack.pop()] = stack.pop();
+	}
+}, {
+	name: '?',
+	exec: function () {
+		output_text[output_text.length - 1] += memory[stack.pop()];
+	}
+}, {
+	name: '+!',
+	exec: function () {
+		memory[stack.pop()] += stack.pop();
+	}
+}, {
+	name: 'MOVE',
+	exec: function () {
+		const [u, to, from] = [stack.pop(), stack.pop(), stack.pop()];
+		memory.splice(to, u, ...memory.slice(from, from + u));
+	}
+}, {
+	name: 'FILL',
+	exec: function () {
+		const [b, u, addr] = [stack.pop(), stack.pop(), stack.pop()];
+		for (let i = addr; i < addr + u; i++) memory[i] = b;
+	}
+}, {
+	name: 'ERASE',
+	exec: function () {
+		const [u, addr] = [stack.pop(), stack.pop()];
+		for (let i = addr; i < addr + u; i++) memory[i] = undefined;
+	}
+}, {
+	name: 'HERE', // ( u -- addr)
+	exec: function () {
+		const u = stack.pop();
+		let index = 0; let count = 0; let addr = 0;
+		while (index < memory.length) {
+			if (typeof memory[index] === 'undefined') count++
+			else { count = 0; addr = index + 1; };
+			if (count === u) break; index++;
+		};
+		stack.push(addr);
+	}
+}, {
+	name: 'ALLOT', // ( addr u -- )
+	exec: function () {
+		const [u, addr] = [stack.pop(), stack.pop()];
+		for (let i = addr; i < addr + u; i++) memory[i] = null;
+	}
+}, {
+	name: ',',
+	exec: function () {
+		// get data-space pointer then assign
+		// pointer is assigned whenever a variable is called
+	}
+}, {
+	name: 'FORGET',
+	exec: function (array) {
+		const i = index[index.length - 1] + 1; index[index.length - 1] = i;
+		const word_index = user_words.findIndex(object => object.name === array[i])
+		if (word_index >= 0) {
+			user_words.splice(word_index, 1);
+			output_text[output_text.length - 1] += `CLEARED ${array[i]} `;
+		} else init_error0(array[i]);
+	}
+}, {
+	name: 'FORGET!',
+	exec: function (array) {
+		user_words = [];
+		output_text[output_text.length - 1] += `CLEARED ALL WORDS `;
+	}
+}, {
+	name: 'WORDS',
+	exec: function () {
+		const string = [];
+		forth_words.forEach(object => string.push(object.name));
+		user_words.forEach(object => string.push(object.name));
+		output_text.push(`${string.join(' ')} `);
+	}
+}, {
+	name: 'SEE',
+	exec: function () {
+		// to expand...
+	}
+}, {
+// DEFINING AND CONTROL STRUCTURE INSTRUCTIONS
+	name: ':',
+	exec: function (array) {
+		let i = index[index.length - 1] + 1;
+		const object = { name: array[i], content: [] };
+		for (i += 1; i < array.length; i++) {
+			if (array[i] === ';') break;
+			object.content.push(array[i]);
+		};
+		if (i === array.length) return init_error1(';');
+		index[index.length - 1] = i;
+		const word_index = user_words.findIndex(word => word.name === object.name);
+		if (word_index >= 0) {
+			user_words.splice(word_index, 1);
+			output_text[output_text.length - 1] += `REDEFINED ${object.name} `;
+		};
+		user_words.push(object);
+	}
+}, {
+	name: 'VAR',
+	exec: function (array) {
+		const i = index[index.length - 1] + 1; index[index.length - 1] = i;
+		if (i === array.length) return init_error2('VAR');
+		let addr = 0; while (typeof memory[addr] !== 'undefined') addr++;
+		memory[addr] = null;
+		object = {name: array[i], content: [addr.toString()] };
+		const var_index = user_words.findIndex(variable => variable.name === object.name);
+		if (var_index >= 0) {
+			user_words.splice(var_index, 1);
+			output_text[output_text.length - 1] += `REDEFINED ${object.name} `;
+		};
+		user_words.push(object);
+	}
+}, {
+	name: 'CONST',
+	exec: function (array) {
+		const i = index[index.length - 1] + 1; index[index.length - 1] = i;
+		if (i === array.length) return init_error2('CONST');
+		let addr = 0; while (typeof memory[addr] !== 'undefined') addr++;
+		object = {name: array[i], content: [stack.pop().toString()] };
+		const const_index = user_words.findIndex(constant => constant.name === object.name);
+		if (const_index >= 0) {
+			user_words.splice(const_index, 1);
+			output_text[output_text.length - 1] += `REDEFINED ${object.name} `;
+		};
+		user_words.push(object);
+	}
+}, {
+	name: 'FUNCTION',
+	exec: function (array) { // To clean up!
+		let i = index[index.length - 1];
+		const content = [];
+		while (array[i - 2] !== '--' && i < array.length) {
+			content.push(array[i]); i++;
+		};
+		i = index[index.length - 1] + 1;
+		const name = array[i]; i++;
+		let string = [];
+		while (array[i] !== ':-' && i < array.length) {
+			string.push(array[i]); i++;
+		}
+		if (i === array.length) return init_error3();
+		string = string.join(' ');
+		const regex = []; i++;
+		while (array[i] !== '--' && i < array.length) {
+			regex.push(new RegExp(array[i])); i++;
+		}
+		if (i === array.length) return init_error3(); 
+		regex.forEach(regex => string = string.replace(regex, 'stack.pop()'));
+		i++;
+
+		const output = array[i].toUpperCase();
+		const object = { name: name, content: content.join(' ') };
+		if (output === 'VOID') object.exec = function () { eval(string); }
+		else if (output === 'ARRAY') object.exec = function () { eval(string).forEach(value => stack.push(value)); }
+		else object.exec = function () { stack.push(eval(string)); }
+
+		index[index.length - 1] = i;
+		user_functions.push(object);
+	}
+}, {
+	name: ':CODE',
+	exec: function (array) {
+		let i = index[index.length - 1] + 1;
+		const string = [];
+		for (i; i < array.length; i++) {
+			if (array[i].toUpperCase() === ';CODE') break;
+			string.push(array[i]);
+		};
+		if (i === array.length) return init_error1(';CODE');
+		index[index.length - 1] = i;
+		eval(string.join(' '));
+	}
+}, {
+	name: 'DO',
+	exec: function () {}
 }];
 
-function exec_instructions(word, array) {
-// INPUT OUTPUT INSTRUCTIONS
-	if (word === '.')		{ output_text[output_text.length - 1] += stack.pop() + space; return; };
-	if (word === '.S')		{ let string = `<${stack.length}> ${stack.join(', ')}`;
-							output_text[output_text.length - 1] += string + space; return; };
-	if (word === '.R')		{ let string = ''; const count = stack.pop();
-							for (let i = 0; i < count; i++) string += space;
-							output_text[output_text.length - 1]
-							+= string + stack.pop() + space; return; };
-	if (word === 'CR')		{ output_text.push(''); return; };
-	if (word === 'SPACE')	{ output_text[output_text.length - 1] += space; return; };
-	if (word === 'SPACES')	{ let string = ''; const count = stack.pop();
-							for (let i = 0; i < count; i++) string += space;
-							output_text[output_text.length - 1] += string; return; };
-	if (word === 'PAGE')	{ while (output_text.length > 0) output_text.pop(); return; };
-	if (word === '."')		{ let i = index[index.length - 1] + 1; let string = '';
-							while (array[i] !== '"') {
-								if (i === array.length) { i--; break; };
-								string += array[i] + space; i++;
-							};
-							index[index.length - 1] = i;
-							output_text[output_text.length - 1] += string; return; };
-	if (word === 'DUMP')	{const [u, addr] = [stack.pop(), stack.pop()];
-							for (let i = addr; i < addr + u; i++)
-								output_text.push(`${i}: ${memory[i]} - ${typeof memory[i]}`);
-							output_text.push(''); return; };
-	if (word === 'TYPE')	{const [u, addr] = [stack.pop(), stack.pop()];
-							for (let i = addr; i < addr + u; i++)
-								output_text[output_text.length - 1]
-								+= memory[i]; return; };
-//	if (word === 'KEY')		{ return; };
-//	if (word === 'EXPECT')	{ return; };
-// MEMORY AND DICTIONARY INSTRUCTIONS
-	if (word === '@')		{ stack.push(memory[stack.pop()]); return; };
-	if (word === '!')		{ memory[stack.pop()] = stack.pop(); return; };
-	if (word === '?')		{ output_text[output_text.length - 1]
-							+= memory[stack.pop()]; return; };
-	if (word === '+!')		{ memory[stack.pop()] += stack.pop(); return; };
-	if (word === 'MOVE')	{ const [u, to, from] = [stack.pop(), stack.pop(), stack.pop()];
-							const temp = memory.slice(from, from + u);
-							memory.splice(to, u, ...temp); return; };
-	if (word === 'FILL')	{ const [b, u, addr] = [stack.pop(), stack.pop(), stack.pop()];
-							for (let i = addr; i < addr + u; i++)
-								memory[i] = b; return; };
-	if (word === 'ERASE')	{ const [u, addr] = [stack.pop(), stack.pop()];
-							for (let i = addr; i < addr + u; i++)
-								memory[i] = null; return; };
-	if (word === 'BLANKS')	{ const [u, addr] = [stack.pop(), stack.pop()];
-							for (let i = addr; i < addr + u; i++)
-								memory[i] = undefined; return; };
-/*			INCLUDE DATA-SPACE POINTER
-	if (word === 'HERE')	{ let addr = 0;
-							while (typeof memory[addr] !== 'undefined') addr++;
-							stack.push(addr); return; };
-	if (word === 'ALLOT')	{ let addr = 0; u = stack.pop();
-							while (typeof memory[addr] !== 'undefined') addr++;
-							for (let i = addr; i < addr + u; i++)
-								memory[i] = null; return; };
-	if (word === ',')		{ let addr = 0;
-							while (typeof memory[addr] !== 'undefined') addr++;
-							memory[addr] = stack.pop(); return; };
-	if (word === "'")		{ let addr = 0;
-							while (typeof memory[addr] !== 'string'
-								&& addr < memory.length) addr++;
-							stack.push(addr); return; };
-*/
-	if (word === 'FORGET')	{ let i = index[index.length - 1] + 1;
-							if (array[i].toUpperCase() === "ALL") {
-								while (words.length !== 0) words.pop();
-								output_text[output_text.length - 1]
-								+= `CLEARED ALL USER DEFINED WORDS `;
-								index[index.length - 1] = i; return;
-							}; const word_index = words.indexOf(object =>
-								object.name === array[i].toUpperCase())
-							if (word_index >= 0) {
-								words.splice(word_index, 1);
-								output_text[output_text.length - 1]
-								+= `CLEARED ${array[i]} WORD `;
-								index[index.length - 1] = i; return;
-							}; init_error3(array[i]); return; };
-	if (word === 'WORDS')	{ let string = instructions.join(' ');
-							words.forEach(item => string += ' ' + item.name.toUpperCase());
-							output_text.push(string + space); return; };
-	if (word === 'SEE')		{ let i = index[index.length - 1] + 1;
-							const word_index = words.findIndex(word => word.name.toUpperCase()
-								=== array[i].toUpperCase());
-							if (word_index >= 0) {
-								const word = words[word_index];
-								output_text.push(`: ${word.name} ${word.content.join(' ')} ;`)
-							} else if (instructions.includes(array[i].toUpperCase()))
-								output_text.push(`Core code.`);
-							else init_error0(array[i]);
-							index[index.length - 1] = i; return; };
-// DEFINING AND CONTROL STRUCTURE INSTRUCTIONS
-	if (word === ':')		{ let i = index[index.length - 1] + 1;
-							const object = {};
-							object.name = array[i];
-							object.content = []; i++;
-							while (array[i] !== ';') {
-								if (i >= array.length) { init_error1(';'); return; };
-								object.content.push(array[i]); i++;
-							};
-							index[index.length - 1] = i;
-							const word_index = words.findIndex(word => word.name === object.name);
-							if (word_index >= 0) {
-								words.splice(word_index, 1);
-								output_text[output_text.length - 1] += `redefined ${object.name} `;
-							};
-							words.push(object); return; };
-	if (word === 'VAR')		{ let i = index[index.length - 1] + 1; let addr = 63000;
-							if (i >= array.length) { init_error2('VAR'); return; };
-							while (typeof memory[addr] !== 'undefined') addr++;
-							memory[addr] = null;
-							object = {name: array[i], content: [addr.toString()] };
-							index[index.length - 1] = i;
-							const var_index = words.findIndex(variable => variable.name === object.name);
-							if (var_index >= 0) {
-								words.splice(var_index, 1);
-								output_text[output_text.length - 1] += `redefined ${object.name} `;
-							};
-							words.push(object); return; };
-	if (word === 'CONST')	{ let i = index[index.length - 1] + 1;
-							if (i >= array.length) { init_error2('CONST'); return; };
-							while (typeof memory[addr] !== 'undefined') addr++;
-							object = {name: array[i], content: [stack.pop().toString()] };
-							index[index.length - 1] = i;
-							const const_index = words.findIndex(constant => constant.name === object.name);
-							if (const_index >= 0) {
-								words.splice(const_index, 1);
-								output_text[output_text.length - 1] += `redefined ${object.name} `;
-							};
-							words.push(object); return; };
-	if (word === ':CODE')	{ let i = index[index.length - 1] + 1;
-							let string = [];
-							while (array[i].toUpperCase() !== ';CODE') {
-								if (array[i] === '') string[string.length - 1] += ' ';
-								else string.push(array[i]); i++;
-								if (i === array.length - 1) break;
-							};
-							index[index.length - 1] = i;
-							eval(string.join(' ')); return; };
+function exec_instructions(array) {
 /*
-	if (word === 'FUNC')
 	if (word === 'DO')
 	if (word === 'LOOP')
 	if (word === '+LOOP')
@@ -507,13 +638,12 @@ function init_error1(word) {
 	output_text.push(`:= ${word} =:`)
 	reset_stack();
 };
-function init_error2(type) {
-	output_text.push(`ATTEMPT TO USE ZERO-LENGTH STRING AS A NAME.`);
-	output_text.push(`${type} >>><<<`);
+function init_error2(word) {
+	output_text.push(`ATTEMPT TO USE ZERO-LENGTH STRING AS A NAME`);
+	output_text.push(`${word} >>><<<`);
 	reset_stack();
 };
 function init_error3(word) {
-	output_text.push(`UNDEFINED WORD NAME`);
-	output_text.push(`FORGET >>>${word}<<<`);
+	output_text.push(`INVALID FUNCTION SYNTAX`);
 	reset_stack();
 };
