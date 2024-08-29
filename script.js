@@ -8,6 +8,7 @@ const stack_html		= document.getElementById('stack');
 const index				= [];
 const stack				= [];
 const return_stack		= [];
+const do_index			= [];
 let output_text			= [];
 let user_words			= [];
 let user_functions		= [];
@@ -598,7 +599,8 @@ const forth_words = [{
 	}
 }, {
 	name: 'DO',
-	exec: function () {}
+	exec: function (array) {
+	}
 }];
 
 function exec_instructions(array) {
