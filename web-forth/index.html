@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ForthScript</title>
+</head>
+<style>
+    * { font-family: monospace; }
+    #container { display: flex; cursor: text; }
+    #input:focus { outline: none; }
+    #output { overflow-wrap: break-word; }
+    #file { display: none; }
+</style>
+<body>
+<main>
+    <div id="output" ></div>
+    <div id="container">
+        <div id="prompt">&gt;&#160;</div>
+        <div id="input"
+             contenteditable="true"
+             spellcheck="false"
+             autofocus
+        ></div>
+    </div>
+    <input type="file" id="file" accept=".fs">
+</main>
+<script src="jforth.js"></script>
+</body>
+</html>
