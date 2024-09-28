@@ -1,0 +1,70 @@
+@font-face {
+    font-family: commodore_pro;
+    src: url(C64_Pro_Mono-STYLE.ttf);
+}
+
+:root {
+    --fg-color: #867ADE;
+    --bg-color: #483AAA;
+    --br-color: #867ADE;
+}
+
+* {
+    font-family: commodore_pro;
+    font-size: 1em;
+    color: var(--fg-color)
+}
+
+body {
+    background-color: var(--br-color);
+    margin: 0;
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+main {
+    background-color: var(--bg-color);
+    margin: auto;
+    height: 40em;
+    width: 64em;
+}
+
+#input {
+    position: absolute;
+    background-color: transparent;
+    caret-color: transparent;
+    padding: 0;
+    border: none;
+    width: 64em;
+}
+
+#input:focus {
+    outline: none;
+}
+
+#input::selection {
+    background-color: var(--fg-color);
+    color: var(--bg-color);
+}
+
+#caret {
+    position: absolute;
+    animation: blink 700ms infinite;
+    pointer-events: none;
+}
+
+@keyframes blink {
+    0%, 49% { opacity: 100%; }
+    50%, 100% { opacity: 0%; }
+}
+
+#file {
+    display: none;
+}
+
+span {
+    white-space: pre;
+}
