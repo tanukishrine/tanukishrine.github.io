@@ -32,6 +32,8 @@
 : 0< -if drop 0 -> then drop -1 ;           ( n -- f )
 : 0= if -> then drop -1 ;                   ( n -- f )
 : 0> negate -if drop 0 -> then drop -1 ;    ( n -- f )
+: true   0 ;                                ( -- f )
+: false -1 ;                                ( -- f )
 
 ( ARITHMETIC AND LOGICAL )
 : -      inv + 1 + ;                                        ( n1 n2 -- diff )
@@ -55,6 +57,7 @@
 ( : mod a! !< dup >r a - -if drop r> -> then r> drop <- ; )
 
 ( MEMORY )
+: r@    r> r> dup >r swap >r ;                              ( -- n )
 : !-    ! a -1 + a! ;                                       ( n -- )
 : @-    @ a -1 + a! ;                                       ( -- n )
 : ?     @ . ;                                               ( -- )
@@ -76,9 +79,9 @@
 : page   0 b! 0 !b ;                        ( -- )
 : type   if drop -> then 1- @+ emit <- ;    ( u -- )
 : .r     0 b! for 160 !b next . ;           ( n u -- )
-: .s     10 a!  8 for !+ next !
-         8 for @- . next @ .
-         19 a!  8 for @- next @ ;           ( -- )
+: .s     16373 a! 8 for !+ next !
+                  8 for @- . next @ .
+         16382 a! 8 for @- next @ ;         ( -- )
 
 ( COLORS )
 : black         0 ;  ( -- n )
@@ -106,8 +109,10 @@ white fg-color
 blue bg-color
 green br-color
 
-: colors
-( addr[2] )
+: colors?
+( foreground = addr[2] )
+( background = addr[3] )
+( border     = addr[4] )
 ( 0: black, 1: white, 2: red, 3: cyan, 4: violet, 5: green, 6: blue )
 ( 7: yellow, 8: orange, 9: brown, 10: light red, 11: dark grey, 12: gray )
 ( 13: light green, 14: light blue, 15: light grey )
@@ -140,7 +145,8 @@ emit 114 emit 101 emit 121 emit 32 emit
 ;
 
 : intro
-( ForthScript 0.1.0, Open Source (2024) by T. Szulc )
+( $$$$$$$$ FORTHSCRIPT 1.2 $$$$$$$$ )
+(    OPEN SOURCE 2024 BY T.SZULC    )
 10 emit
 32 emit 32 emit 32 emit 32 emit 32 emit 32 emit 32 emit 32 emit 32 emit 32 emit
 32 emit 32 emit 32 emit 32 emit 32 emit 36 emit 36 emit 36 emit 36 emit 36 emit

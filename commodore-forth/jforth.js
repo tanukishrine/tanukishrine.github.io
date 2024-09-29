@@ -303,6 +303,27 @@ const ops = [{
         P += i
     }
 }, {
+    name: 'words',
+    exec: () => {
+        temp.push('')
+        ops.forEach(word => temp_join(word.name + ' '))
+        dict.forEach(word => temp_join(word.name + ' '))
+    }
+}, {
+    name: 'forget',
+    exec: chunk => {
+        P++
+        const i = dict.findIndex(word => word.name == chunk.at(P))
+        if (i == -1) error('No such word defined', chunk)
+        dict.splice(i, 1)
+    }
+}, {
+    name: 'forget!',
+    exec: chunk => {
+        P++
+        while (dict.length) dict.pop()
+    }
+}, {
     name: 'include',
     exec: () => {
         input.style.display = 'none'
@@ -310,18 +331,22 @@ const ops = [{
     }
 }]
 
+// forth file upload
 file.addEventListener('change', event => {
+    const load = e => {
+        parse(filter(e.target.result))
+        if (!abort) temp_join('\u00a0ok')
+        groom()
+    }
     const source = event.target.files[0]
     if (source) {
         const reader = new FileReader()
-        reader.onload = e => parse(filter(e.target.result))
+        reader.onload = e => load(e)
         reader.readAsText(source)
-        if (!abort) temp_join('\u00a0ok')
     }
     file.style.display = 'none'
     input.style.display = 'block'
     input.focus()
-    groom()
 })
 
 const colors = [{
@@ -374,7 +399,7 @@ const colors = [{
     hex: '#B3B3B3'
 }]
 
-// I.O. interface
+// output display
 let temp = []; temp.push('')
 let text = []
 function groom() {
@@ -388,11 +413,13 @@ function groom() {
 
 const temp_join = string => temp[temp.length - 1] += string
 
+// extended forth vocab
 fetch('extension.fs')
     .then(response => response.text())
     .then(data => { parse(filter(data)); groom() })
     .catch(error => console.error(error))
 
+// input
 input.addEventListener('keyup', event => {
     if (event.key == 'Enter') {
         abort = false
@@ -404,18 +431,20 @@ input.addEventListener('keyup', event => {
     }
 });
 
-input.addEventListener('keyup', update_caret)
+// caret display
+input.addEventListener('keyup',   update_caret)
 input.addEventListener('keydown', update_caret)
-input.addEventListener('click', update_caret)
+input.addEventListener('click',   update_caret)
 function delay(ms) { return new Promise(resolve => setTimeout(resolve, ms)) }
 async function update_caret() {
     await delay(1)
     const position = input.selectionStart
     const spaces = []
     for (let i = 0; i < position; i++) spaces.push('\xa0')
-    if (position >= 64 ) spaces.push('\xa0')
+    if (position >= 64 ) caret.style.display = 'none'
+    else caret.style.display = 'block'
     caret.innerHTML = spaces.join('') + '\u2588'
 }
 
 input.addEventListener('focus', () => caret.style.display = 'block')
-input.addEventListener('blur', () => caret.style.display = 'none')
+input.addEventListener('blur',  () => caret.style.display = 'none')
