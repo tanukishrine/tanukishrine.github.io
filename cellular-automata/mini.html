@@ -1,0 +1,29 @@
+<!doctype html>
+<canvas></canvas>
+<script>
+const canvas = document.querySelector('canvas')
+const ctx = canvas.getContext('2d')
+canvas.width  = window.innerWidth  - 20
+canvas.height = window.innerHeight - 20
+const w = Math.floor(canvas.width  / 10)
+const h = Math.floor(canvas.height / 10)
+let arr = Array.from(Array(h), () => Array.from(Array(w), () => Math.round(Math.random())))
+setInterval(() => {
+    let tmp = Array.from(Array(h), () => Array(w).fill(0))
+    for (let H = 0; H < h; H++) for (let W = 0; W < w; W++) {
+        if (arr[H][W]) ctx.fillRect(W*10, H*10, 10, 10)
+        else ctx.clearRect(W*10, H*10, 10, 10)
+        let count = (H-1 < 0)           ? 0 : arr[H-1][W] 
+        count += (W-1 < 0)              ? 0 : arr[H][W-1] 
+        count += (H+1 == h)             ? 0 : arr[H+1][W] 
+        count += (W+1 == w)             ? 0 : arr[H][W+1] 
+        count += (H-1 < 0 || W-1 < 0)   ? 0 : arr[H-1][W-1]
+        count += (H-1 < 0 || W+1 == w)  ? 0 : arr[H-1][W+1] 
+        count += (H+1 == h || W-1 < 0)  ? 0 : arr[H+1][W-1] 
+        count += (H+1 == h || W+1 == w) ? 0 : arr[H+1][W+1] 
+        if (count == 2) tmp[H][W] = arr[H][W]
+        else if (count == 3) tmp[H][W] = 1
+        else tmp[H][W] = 0
+    } arr = tmp
+}, 100)
+</script>
