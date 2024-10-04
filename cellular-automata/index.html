@@ -7,43 +7,55 @@
 <style>
 @font-face { font-family: commodore_round; src: url(Commodore_Rounded.ttf); }
 * { font-family: commodore_round; }
+* { font-size: 1em; }
 </style>
-<body>
+<body style='color: #000000; background-color: #84C5CC;'>
     <main>
-    <div>
-        <label id='width-tag' for='width'>Width (64)</label>
+    <center>
         <input id='width' name='width' type='range' min='5' max='256' value='64' />
-        <label id='height-tag' for='height'>Height (42)</label>
+        <label id='width-tag' for='width'>Width (64)</label>
+        &nbsp;
         <input id='height' name='height' type='range' min='5' max='168' value='42' />
-    </div>
-    <div>
+        <label id='height-tag' for='height'>Height (42)</label>
+    </center>
+    <center>
         <label for='speed'>Interval</label>
         <input id='speed' name='speed' type='number' min='1' max='1000' value='100' />
-        <label for='speed'>(ms)</label>
-    </div>
-    <canvas id='display' width='640' height='420' style='margin: 10px 0;'></canvas>
-    <div>
+        &nbsp;
         <label for='rule'>Seed</label>
         <input id='rule' name='rule' type='text' value='002100000' size='9' maxlength='9' minlength='9' />
         <button id='random'>Random</button>
+    </center>
+    <center>
+        <canvas id='display' width='640' height='420' style='margin: 10px 0;'></canvas>
+    </center>
+    <center>
         <button id='toggle'>Start</button>
         <button id='step'>Step</button>
-    </div>
-    <div style='margin-top: 5px;'>
+    </center>
+    <center style='margin-top: 5px;'>
         <button id='noise'>Noise</button>
         <button id='blank'>Blank</button>
         <button id='full'>Full</button>
         <select id='skin'>
             <option value='grad'>Shadow</option>
-            <option value='flat'>Basic</option>
+            <option value='flat'>Flat</option>
+            <option value='ginv'>!Shadow</option>
+            <option value='finv'>!Flat</option>
         </select>
-    </div>
-    <p>&gt; <a href='mini.html' target='_blank'>mini.html</a> &lt;<br/>
-    Attempt at creating a very small game of life.</p>
-    <p>
-        Cool seeds:<br/>
-        201210111
-    </p>
+    </center>
+    <center style='margin-top: 10px;'>
+        <button id='info'>Info</button><br/>
+    </center>
+    <span id='info-text' style='display: none; max-width: 640px; margin: 0 auto;'>
+        The seed accepts a 9-digit value. It accepts only values between 0 and
+        2 (inclusive). The index along the string relates to the number of live
+        cells proximal to the cell in question.<br/>
+        &nbsp;[0] Cell dies; [1] Cell lives; <br/>
+        &nbsp;[2] Persist previous cell state.<br/><br/>
+        &nbsp; &gt; <a href='mini.html' target='_blank'>mini.html</a> &lt;<br/>
+        Attempt at creating a very small game of life.<br/><br/>
+    </span>
     </main>
 </body>
 <script>
@@ -61,7 +73,9 @@ let arr = rnd_arr()
 let tra = gen_arr(0)
 
 const grad = ['#FFFFFF', '#EEEEEE', '#DDDDDD', '#CCCCCC', '#BBBBBB', '#AAAAAA', '#000000']
+const ginv = ['#000000', '#111111', '#222222', '#333333', '#444444', '#555555', '#FFFFFF']
 const flat = ['#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#000000']
+const finv = ['#000000', '#000000', '#000000', '#000000', '#000000', '#000000', '#FFFFFF']
 let rgb = grad
 
 function print () {
@@ -170,7 +184,18 @@ skin.addEventListener('input', () => {
     switch (skin.value) {
         case('grad'): rgb = grad; break;
         case('flat'): rgb = flat; break;
+        case('ginv'): rgb = ginv; break;
+        case('finv'): rgb = finv; break;
     } print()
+})
+
+const info = document.querySelector('#info')
+const info_text = document.querySelector('#info-text')
+let info_display = true;
+info.addEventListener('click', () => {
+    if (info_display) info_text.style.display = 'block'
+    else info_text.style.display = 'none'
+    info_display = !info_display
 })
 
 </script>
