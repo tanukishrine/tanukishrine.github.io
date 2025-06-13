@@ -1,0 +1,87 @@
+:root {
+  --white: #FFFFFF;
+  --yellow: #D5DF7C;
+  --red: #924A40;
+  --brown: #675200;
+  --cyan: #84C5CC;
+  --blue: #483AAA;
+  --black: #000000;
+}
+
+@font-face {
+  font-family: commodore_pro;
+  src: url(C64_Pro_Mono-STYLE.ttf);
+}
+
+* {
+  font-family: commodore_pro;
+  font-size: 1rem;
+}
+
+body {
+  background-color: var(--white);
+  margin: 0;
+}
+
+main {
+  background-color: var(--white);
+  width: 90vw;
+  margin: 5vw;
+}
+
+#output {
+  color: var(--red);
+}
+
+#input, #caret {
+  color: var(--red);
+}
+
+.highlight {
+  color: var(--white);
+  background-color: var(--red);
+}
+
+#output, #input, #caret {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  width: 80vw;
+}
+
+#input {
+  position: absolute;
+  caret-color: transparent;
+  padding: 0;
+  border: none;
+  resize: none;
+}
+
+#input:focus {
+  outline: none;
+}
+
+#input::selection {
+  background-color: transparent;
+}
+
+#input:disabled {
+  background-color: transparent;
+}
+
+#caret {
+  position: absolute;
+  pointer-events: none;
+}
+
+.blink {
+  animation: blink 700ms infinite;
+}
+
+@keyframes blink {
+  0%, 49% { opacity: 100%; }
+  50%, 100% { opacity: 0%; }
+}
+
+.non-collide {
+  position: absolute;
+}
